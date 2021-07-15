@@ -1,14 +1,24 @@
-const ampq = require("amqplib");
-const { credentials } = require("./util");
+const { channel, exchangeCredentials, remindersQueue } = require("./util");
 
-let publishToQueue = async (msq) => {
-  const connection = await ampq.connect("");
-  const channel = await connection.createChannel();
-  const ex = await channel.assertExchange(credentials.ex, credentials.exType);
-  const queue = await channel.assertQueue(credentials.queue);
-  channel.bindQueue(credentials.queue, credentials.ex);
-
-  channel.publish(ex, credentials.queue, Buffer.from(msq.toString()));
-  channel.close();
-  connection.close();
+module.exports.publishToQueue = async (msg) => {
+  try {
+    let credentials = await channel();
+    const ch = credentials.channel;
+    await ch.assertExchange(exchangeCredentials.ex, exchangeCredentials.exType);
+    await ch.assertQueue(remindersQueue.queue);
+    await ch.bindQueue(
+      remindersQueue.queue,
+      exchangeCredentials.ex,
+      remindersQueue.key
+    );
+    ch.publish(
+      exchangeCredentials.ex,
+      remindersQueue.key,
+      Buffer.from(JSON.stringify(msg))
+    );
+    await ch.close();
+    await credentials.conn.close();
+  } catch (error) {
+    console.warn(error);
+  }
 };
