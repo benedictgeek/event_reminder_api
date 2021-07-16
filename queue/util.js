@@ -11,7 +11,7 @@ module.exports.channel = async () => {
 
 module.exports.exchangeCredentials = {
   ex: "reminders",
-  exType: "direct",
+  exType: "x-delayed-message",
 };
 
 module.exports.remindersQueue = {
